@@ -43,6 +43,59 @@ En AWS puedes usar esta configuración como punto de partida y ajustar:
 - Cambia `WORDPRESS_DB_PASSWORD` y `MYSQL_ROOT_PASSWORD` por valores seguros antes de producción.
 - Para un despliegue real en AWS, considera usar Amazon RDS o Amazon Aurora para la base de datos, y guarda el contenido de WordPress en un volumen persistente.
 
+## Desarrollo local (editar temas / plugins con tu IDE)
+
+Para poder editar archivos de WordPress (`wp-content/themes`, `wp-content/plugins`, `wp-content/uploads`) directamente desde tu IDE en la máquina host, usamos un bind-mount.
+
+1. Asegúrate de tener el directorio `wp-content` en la raíz del proyecto (ya existe `.gitkeep`).
+2. Levanta los servicios con el override (el archivo `docker-compose.override.yml` que se incluye monta `./wp-content` en el contenedor):
+
+```bash
+docker compose up -d --build
+```
+
+3. Ahora podrás abrir y editar `wp-content` con tu IDE; los cambios se reflejarán inmediatamente en el contenedor.
+
+Notas de permisos:
+
+
+```bash
+docker compose exec wordpress chown -R www-data:www-data /var/www/html/wp-content
+```
+
+
+Nota sobre el script de entrada (`docker-entrypoint-initwp.sh`)
+
+- Por seguridad y para evitar problemas de permisos, el entrypoint no se monta desde el host por defecto. El script está incluido en la imagen durante el build y tiene los permisos correctos.
+- Si quieres editar el entrypoint, modifica `wordpress/docker-entrypoint-initwp.sh` y reconstruye la imagen:
+
+```bash
+docker compose build --no-cache wordpress
+docker compose up -d
+```
+
+Evita bind-montar el entrypoint a menos que sepas manejar permisos en el host (en tal caso asegúrate de `chmod +x` en el archivo del host antes de arrancar).
+
+
+Evitar problemas de permisos
+
+- Puedes configurar el contenedor para que coincida la propiedad de los archivos con tu usuario de host configurando `PUID` y `PGID` en tu `.env` (o en el entorno utilizado por Docker Compose). Ejemplo para usuarios de macOS:
+
+```bash
+PUID=501
+PGID=20
+```
+
+- El archivo de sobreescritura de compose pasa estos valores al contenedor `wordpress` y el entrypoint intentará `chown` `wp-content` a ese UID/GID al inicio. Esto evita problemas de permisos al editar archivos desde tu IDE.
+
+- Si los bind-mounts aún muestran problemas de permisos en macOS, es posible que necesites `sudo chown` la carpeta del host a tu usuario, por ejemplo:
+
+```bash
+sudo chown -R $(id -u):$(id -g) wp-content
+```
+
+
+
 ## Headless (modo sin frontend integrado)
 
 Puedes activar un modo "headless" mediante la variable `HEADLESS` en el archivo `.env`.

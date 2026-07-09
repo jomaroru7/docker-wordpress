@@ -16,6 +16,9 @@ services:
     build:
       context: ./wordpress
       dockerfile: Dockerfile
+      args:
+        PUID: ${PUID:-33}
+        PGID: ${PGID:-33}
     restart: always
     ports:
       - "8000:80"
