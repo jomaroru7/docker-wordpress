@@ -1,7 +1,10 @@
-FROM wordpress:latest
+FROM wordpress:7.0-php8.2-apache
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -y less wget unzip ca-certificates curl gnupg2 \
+  && apt-get install -y --no-install-recommends wget unzip ca-certificates curl \
+  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 # Install WP-CLI
