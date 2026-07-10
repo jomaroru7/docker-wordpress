@@ -13,12 +13,15 @@ RUN apt-get update \
 # IMPORTANT: do this FIRST before copying files so chown works
 RUN groupadd -g ${PGID} hostuser 2>/dev/null || true \
   && id -u hostuser >/dev/null 2>&1 || useradd -u ${PUID} -g ${PGID} -d /var/www/html -s /bin/bash hostuser || true \
-  && sed -ri "s/^export APACHE_RUN_USER=.*/export APACHE_RUN_USER=hostuser/" /etc/apache2/envvars \
-  && sed -ri "s/^export APACHE_RUN_GROUP=.*/export APACHE_RUN_GROUP=hostuser/" /etc/apache2/envvars \
-  && chown -R hostuser:hostuser /var/www/html || true
+  && sed -ri "s/^export APACHE_RUN_USER=.*/export APACHE_RUN_USER=www-data/" /etc/apache2/envvars \
+  && sed -ri "s/^export APACHE_RUN_GROUP=.*/export APACHE_RUN_GROUP=www-data/" /etc/apache2/envvars \
+  && chown -R www-data:www-data /var/www/html || true
 
 # Enable AllowOverride for .htaccess directives to work
 RUN sed -i '/<Directory \/var\/www\/html>/,/<\/Directory>/s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+
+# Make sure the WordPress root is accessible and writable for the apache user
+RUN chown -R www-data:www-data /var/www/html && chmod -R u+rwX /var/www/html
 
 # Copy .htaccess for REST API and pretty permalinks
 COPY .htaccess /var/www/html/.htaccess

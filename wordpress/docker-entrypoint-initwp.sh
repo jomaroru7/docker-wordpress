@@ -7,23 +7,14 @@ export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
 mkdir -p /var/www/html/wp-content/mu-plugins
 chown -R www-data:www-data /var/www/html/wp-content/mu-plugins || true
 
-# If host provided PUID/PGID, adjust ownership of wp-content to match host user
-if [ -n "${PUID:-}" ] && [ -n "${PGID:-}" ]; then
-  echo "Adjusting ownership of /var/www/html/wp-content to ${PUID}:${PGID}"
-  # If hostuser exists, use its name; otherwise try numeric chown
-  if id -u hostuser >/dev/null 2>&1; then
-    chown -R hostuser:hostuser /var/www/html/wp-content || true
-  else
-    chown -R ${PUID}:${PGID} /var/www/html/wp-content || true
-  fi
-else
-  # Ensure hostuser or www-data owns wp-content by default
-  if id -u hostuser >/dev/null 2>&1; then
-    chown -R hostuser:hostuser /var/www/html/wp-content || true
-  else
-    chown -R www-data:www-data /var/www/html/wp-content || true
-  fi
+# Ensure the default WordPress filesystem is available before continuing
+if [ ! -f /var/www/html/wp-config.php ]; then
+  echo "WordPress config not found yet; continuing startup."
 fi
+
+# Ensure base apache permissions are healthy
+chown -R www-data:www-data /var/www/html 2>/dev/null || true
+chmod -R u+rwX /var/www/html 2>/dev/null || true
 
 # If HEADLESS is not true, fall back to original entrypoint
 if [ "${HEADLESS:-false}" != "true" ]; then
@@ -44,10 +35,19 @@ until nc -z db 3306 2>/dev/null; do
   i=$((i+1))
 done
 
+
+## Ensure the default WordPress filesystem is available before continuing
+if [ ! -f /var/www/html/wp-config.php ]; then
+  echo "WordPress config not found yet; continuing startup."
+fi
+
+# Make sure Apache can read/write the WordPress directory after bind mounts
+chown -R www-data:www-data /var/www/html 2>/dev/null || true
+chmod -R u+rwX /var/www/html 2>/dev/null || true
 ## If WP is not installed, attempt a silent install using env variables (or sensible defaults).
 if ! wp core is-installed --allow-root --path=/var/www/html; then
   echo "WordPress not installed; performing automatic install..."
-  SITE_URL=${WORDPRESS_SITE_URL:-http://localhost:8000}
+  SITE_URL=${WORDPRESS_SITE_URL:-https://localhost}
   SITE_TITLE=${WORDPRESS_SITE_TITLE:-WordPress}
   ADMIN_USER=${WORDPRESS_ADMIN_USER:-admin}
   ADMIN_PASSWORD=${WORDPRESS_ADMIN_PASSWORD:-admin}

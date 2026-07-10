@@ -3,9 +3,9 @@ services:
     volumes:
       # Bind-mount wp-content for local development so IDE can edit themes/plugins/uploads
       - ./wp-content:/var/www/html/wp-content:cached
+    environment:
+      PUID: ${PUID:-33}
+      PGID: ${PGID:-33}
       # NOTE: do NOT bind-mount the entrypoint script by default.
       # The entrypoint is baked into the image with correct permissions.
       # If you edit the entrypoint, update the file in `wordpress/` and rebuild the image.
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}

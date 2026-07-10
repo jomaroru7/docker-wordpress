@@ -1,0 +1,3 @@
+wp-tutorial.jomaroru.dev {
+    reverse_proxy wordpress:80
+}

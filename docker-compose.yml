@@ -20,18 +20,42 @@ services:
         PUID: ${PUID:-33}
         PGID: ${PGID:-33}
     restart: unless-stopped
-    ports:
-      - "8000:80"
+    expose:
+      - "80"
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
       WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
       WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX}
+      WORDPRESS_SITE_URL: ${WORDPRESS_SITE_URL}
+      WORDPRESS_SITE_TITLE: ${WORDPRESS_SITE_TITLE}
+      WORDPRESS_ADMIN_USER: ${WORDPRESS_ADMIN_USER}
+      WORDPRESS_ADMIN_PASSWORD: ${WORDPRESS_ADMIN_PASSWORD}
+      WORDPRESS_ADMIN_EMAIL: ${WORDPRESS_ADMIN_EMAIL}
       HEADLESS: ${HEADLESS}
       FRONTEND_URL: ${FRONTEND_URL}
+      PUID: ${PUID:-33}
+      PGID: ${PGID:-33}
     volumes:
       - wordpress_data:/var/www/html
+
+  caddy:
+    image: caddy:2
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - wordpress
 
   # phpmyadmin:
   #   image: phpmyadmin/phpmyadmin:latest
@@ -48,3 +72,5 @@ services:
 volumes:
   db_data:
   wordpress_data:
+  caddy_data:
+  caddy_config:
