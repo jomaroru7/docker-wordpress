@@ -1,3 +1,6 @@
 wp-tutorial.jomaroru.dev {
+    @root path /
+    redir @root /wp-admin/ 308
+
     reverse_proxy wordpress:80
 }
