@@ -30,11 +30,11 @@ if [ "${HEADLESS:-false}" != "true" ]; then
   exec docker-entrypoint.sh "$@"
 fi
 
-## Wait for DB to be available so wp-cli commands can connect
+## Wait for DB to be available by testing port connectivity
 RETRIES=60
-SLEEP=5
+SLEEP=2
 i=0
-until wp db check --allow-root --path=/var/www/html 2>/dev/null; do
+until nc -z db 3306 2>/dev/null; do
   if [ $i -ge $RETRIES ]; then
     echo "Timeout waiting for database; handing over to original entrypoint."
     exec docker-entrypoint.sh "$@"
