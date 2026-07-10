@@ -1,7 +1,7 @@
 services:
   db:
     image: mariadb:10.9
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${WORDPRESS_DB_NAME}
       MYSQL_USER: ${WORDPRESS_DB_USER}
@@ -19,7 +19,7 @@ services:
       args:
         PUID: ${PUID:-33}
         PGID: ${PGID:-33}
-    restart: always
+    restart: unless-stopped
     ports:
       - "8000:80"
     environment:
@@ -35,7 +35,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
-    restart: always
+    restart: unless-stopped
     depends_on:
       - db
     ports:
